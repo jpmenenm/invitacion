@@ -100,7 +100,7 @@
   const makeImg = (src, w, h) => { const i = new Image(); i.src = src; i.alt = ''; i.decoding = 'async'; if (w) { i.width = w; i.height = h; } i.setAttribute('aria-hidden', 'true'); return i; };
 
   const heroFlora = [];
-  $$('[data-flora]').forEach(host => {
+  $$('[data-flora]').forEach(host => safe(() => {
     const [fx, fy] = CORNER[host.dataset.flora];
     const img = makeImg('flora-' + (host.dataset.variant || 'a') + '.webp');
     host.appendChild(img);
@@ -112,15 +112,15 @@
     tl.from(img, { opacity: 0, x: 70, y: 70, rotation: 7, duration: 2.1, ease: 'power3.out' })
       .add(() => gsap.to(img, { rotation: -1.8, duration: 4.5 + Math.random() * 2, yoyo: true, repeat: -1, ease: 'sine.inOut' }));
     if (inHero) heroFlora.push(tl);
-  });
+  }));
 
   // Separadores: guirnalda que se abre desde el centro
-  $$('[data-divider]').forEach(host => {
+  $$('[data-divider]').forEach(host => safe(() => {
     const img = makeImg('guirnalda.webp', 1800, 270);
     host.appendChild(img);
     if (reduce) return;
     gsap.fromTo(img, { clipPath: 'inset(0 50% 0 50%)', opacity: 0 }, { clipPath: 'inset(0 0% 0 0%)', opacity: 1, duration: 1.9, ease: 'power3.inOut', scrollTrigger: { trigger: host, start: 'top 92%', once: true } });
-  });
+  }));
 
   /* ============ TEXTOS: separar en palabras para stagger ============ */
   function splitWords(el) {
@@ -144,14 +144,14 @@
     $$('.w', el).forEach(w => w.setAttribute('aria-hidden', 'true'));
   }
 
-  $$('[data-split]').forEach(el => {
+  $$('[data-split]').forEach(el => safe(() => {
     splitWords(el);
     if (reduce) return;
     gsap.from($$('.wi', el), { yPercent: 118, duration: 1.2, stagger: .08, ease: 'power4.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
-  });
+  }));
 
   /* Reveals generales al hacer scroll */
-  if (!reduce) {
+  if (!reduce) safe(() => {
     const items = $$('[data-reveal]');
     gsap.set(items, { y: 38 });
     ScrollTrigger.batch(items, {
@@ -164,7 +164,7 @@
       gsap.fromTo(img, { yPercent: -5 }, { yPercent: 5, ease: 'none', scrollTrigger: { trigger: img.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } });
     });
 
-  }
+  });
 
   /* Entrada del hero (se ejecuta al abrir la invitación) */
   function playHero() {
@@ -182,7 +182,7 @@
 
   /* ============ STORYTELLING ============ */
   // Barra de progreso del recorrido
-  if (!reduce) gsap.to('#progress', { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: .3 } });
+  if (!reduce) safe(() => gsap.to('#progress', { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: .3 } }));
   else $1('#progress').style.display = 'none';
 
   // Palabras que se "encienden" con el scroll
@@ -318,9 +318,9 @@
   });
 
   // Fachada del castillo: se abre como un arco al entrar
-  if (!reduce) $$('.arch__frame').forEach(f => {
+  if (!reduce) $$('.arch__frame').forEach(f => safe(() => {
     gsap.fromTo(f, { clipPath: 'inset(22% 14% 0% 14% round 999px 999px 0 0)' }, { clipPath: 'inset(0% 0% 0% 0% round 999px 999px 0 0)', duration: 1.8, ease: 'power4.out', scrollTrigger: { trigger: f, start: 'top 85%', once: true } });
-  });
+  }));
 
   /* Imanes en los botones (solo puntero fino) */
   if (!reduce && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
