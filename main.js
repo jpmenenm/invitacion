@@ -108,7 +108,9 @@
     if (reduce) return;
     gsap.set(img, { transformOrigin: '100% 100%' });
     const inHero = !!host.closest('.hero');
-    const tl = gsap.timeline({ paused: inHero, scrollTrigger: inHero ? undefined : { trigger: host, start: 'top 94%', once: true } });
+    // Las flores de la pantalla de entrada viven en una capa fija: se animan al instante, sin ScrollTrigger
+    const inIntro = !!host.closest('.intro');
+    const tl = gsap.timeline({ paused: inHero, scrollTrigger: (inHero || inIntro) ? undefined : { trigger: host, start: 'top 94%', once: true } });
     tl.from(img, { opacity: 0, x: 70, y: 70, rotation: 7, duration: 2.1, ease: 'power3.out' })
       .add(() => gsap.to(img, { rotation: -1.8, duration: 4.5 + Math.random() * 2, yoyo: true, repeat: -1, ease: 'sine.inOut' }));
     if (inHero) heroFlora.push(tl);
@@ -211,7 +213,7 @@
       gsap.set(daisy, { opacity: 0 }); return;
     }
     gsap.set(daisy, { scale: 0, opacity: 0 });
-    const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: section, start: 'top top', end: 'bottom bottom', scrub: 1, invalidateOnRefresh: true } });
+    const tl = gsap.timeline({ defaults: { ease: 'none' }, paused: true });
     tl.fromTo(d,  { x: () => -sw() * .62, y: 50, rotation: -16, opacity: 0 }, { x: () => -sw() * .27, y: 0, rotation: -6, opacity: 1, duration: 1.2, ease: 'power2.out' }, 0)
       .fromTo(jo, { x: () => sw() * .62, y: 50, rotation: 16, opacity: 0 }, { x: () => sw() * .27, y: 0, rotation: 5, opacity: 1, duration: 1.2, ease: 'power2.out' }, 0)
       .to(words, { opacity: 1, duration: .3, stagger: { each: .1 } }, .5)
@@ -219,6 +221,20 @@
       .to(jo, { x: () => endX(), rotation: 3, duration: 1.1, ease: 'power2.inOut' }, 1.9)
       .to(daisy, { scale: 1, opacity: 1, rotation: 180, duration: .9, ease: 'back.out(1.8)' }, 2.5)
       .to({}, { duration: .5 });
+
+    // Control propio del avance (sin ScrollTrigger): el progreso sale de la posición de la sección,
+    // que queda fija con position: sticky. Funciona igual en iPhone y escritorio.
+    const drive = () => {
+      const r = section.getBoundingClientRect();
+      const total = section.offsetHeight - window.innerHeight;
+      const prog = total > 0 ? clamp(-r.top / total, 0, 1) : 0;
+      gsap.to(tl, { progress: prog, duration: .7, ease: 'power2.out', overwrite: true });
+    };
+    window.addEventListener('scroll', drive, { passive: true });
+    const refit = () => { tl.invalidate(); drive(); };
+    window.addEventListener('resize', refit);
+    window.addEventListener('load', refit);
+    drive();
   });
 
   // Capítulo II: la margarita recorre el día, de la ceremonia al almuerzo
