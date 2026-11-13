@@ -203,13 +203,15 @@
     const d = $1('.polaroid--d'), jo = $1('.polaroid--j'), daisy = $1('.story__daisy'), stage = $1('.story__stage');
     const words = splitScrub($1('#storyText'));
     const sw = () => stage.offsetWidth;
-    const endX = () => sw() * (sw() < 520 ? .21 : .07);   // en celular las fotos no se tapan al juntarse
+    // Centrado con GSAP (no con la propiedad CSS `translate`, que celulares antiguos ignoran)
+    gsap.set([d, jo, daisy], { xPercent: -50, yPercent: -50 });
+    const endX = () => sw() * (sw() < 520 ? .21 : .135);   // en celular las fotos no se tapan al juntarse
     if (reduce) {
       gsap.set(d, { x: () => -sw() * .12, rotation: -3 }); gsap.set(jo, { x: () => sw() * .12, rotation: 3 });
       gsap.set(daisy, { opacity: 0 }); return;
     }
     gsap.set(daisy, { scale: 0, opacity: 0 });
-    const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: section, start: 'top top', end: '+=230%', pin: '.story__pin', scrub: 1, anticipatePin: 1, invalidateOnRefresh: true } });
+    const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: section, start: 'top top', end: 'bottom bottom', scrub: 1, invalidateOnRefresh: true } });
     tl.fromTo(d,  { x: () => -sw() * .62, y: 50, rotation: -16, opacity: 0 }, { x: () => -sw() * .27, y: 0, rotation: -6, opacity: 1, duration: 1.2, ease: 'power2.out' }, 0)
       .fromTo(jo, { x: () => sw() * .62, y: 50, rotation: 16, opacity: 0 }, { x: () => sw() * .27, y: 0, rotation: 5, opacity: 1, duration: 1.2, ease: 'power2.out' }, 0)
       .to(words, { opacity: 1, duration: .3, stagger: { each: .1 } }, .5)
@@ -255,6 +257,11 @@
         return { iris, lid };
       });
       host.insertBefore(rig, host.firstChild);
+      // Respaldo para navegadores sin aspect-ratio: el ancho se calcula desde el alto
+      if (!(window.CSS && CSS.supports && CSS.supports('aspect-ratio', '1 / 1'))) {
+        const fit = () => { rig.style.width = Math.round(rig.offsetHeight * P.w / P.h) + 'px'; };
+        fit(); window.addEventListener('resize', fit);
+      }
       return { rig, eyes, name: $1('.peeker__name', host) };
     }
 
